@@ -1,0 +1,217 @@
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src='./react.js'></script>
+<script src='./react-dom.js'></script>
+
+<script>
+
+"use strict";
+
+function initialAppData(){
+  return {items: []};
+}
+
+function loadAppData() {
+  //var data = localStorage.appData;
+  //if (data == null) {
+  //  return initialAppData();
+  //} else {
+  //  return JSON.parse(data);
+  //}
+  return {
+    items: [
+      {name: 'Батарейка', isAcceptable: true, imgSrc: 'http://mirdv.su/wp-content/uploads/2015/03/%D0%B1%D0%B0%D1%82%D0%B0%D1%80%D0%B5%D0%B9%D0%BA%D0%B0-duracell-930x1152.jpeg'},
+      {name: 'Пластиковая бутылка', isAcceptable: true, imgSrc: 'http://priveteda.ru/image/cache/data/napitki/voda/aqua-minerale-gaz-20-500x500.jpg'},
+      {name: 'Ртутный термометр', isAcceptable: false, imgSrc: 'http://cyr-masha.narod.ru/term1.JPG' },
+    ]
+  };
+}
+
+function initialAppState(appData) {
+  return {
+    appData: appData, 
+    searchTerm: ''
+    // todo
+  };
+}
+
+function foundItems() {
+  return appState.appData.items.filter(function(item) {
+    return item.name.toLowerCase().indexOf(appState.searchTerm.toLowerCase()) != -1;
+  });
+}
+
+var appState = initialAppState(loadAppData());
+
+var RF = React.createFactory.bind(React);
+var div = RF('div');
+var button = RF('button');
+var input = RF('input');
+
+//function ToggleModeBtn() {
+//  var msg = appState.editMode ? 'Закончить редактирование', 'Начать редактирование' 
+//  return button(null, jk
+//}
+
+var ItemComp = RF(function(props){
+  var item = props.item;
+  return div({className: ('item ' + (item.isAcceptable ? 'item-acceptable' : 'item-not-acceptable'))},
+    div({className: 'item-img', style: {backgroundImage: 'url("'+item.imgSrc+'")'}}),
+    div({className: 'item-content'}, 
+      div({className: 'item-name'}, item.name),
+      item.isAcceptable 
+        ?  div({className: 'item-status item-status-ok'}, '✓ Принимается')
+        :  div({className: 'item-status item-status-fail'}, '🚫  Не принимается')
+    )
+  );
+});
+
+function h(fn) {
+  return function() {
+    fn.apply(null, arguments);
+    render();
+  }
+}
+
+var AppComp = RF(function(){
+  var items = foundItems();
+  if(items.length === 0) {
+    var content = div({className: 'no-items-found'}, 'Ничего не найдено');
+  } else {
+    var content = items.map(function(item){return ItemComp({item: item, key: item.name})});
+  }
+  return div({className: 'app'}, 
+    div({className: 'search-wrapper'},
+      (appState.searchTerm !== '')
+        ? div({className: 'search-remove', onClick: h(function(){appState.searchTerm = ''})}, '✕')
+        : null,
+      input({className: 'search', placeholder: 'Поиск', valueLink: link(appState, 'searchTerm')})
+    ),
+    div({className: 'items-list'}, content)
+  );
+});
+
+function link(o, propName) {
+  return {
+    value: o[propName], 
+    requestChange: function(val){
+      o[propName]= val;
+      render();
+    }
+  };
+}
+
+function render() {
+  ReactDOM.render(AppComp(), document.getElementById('app'));
+}
+
+window.onload = function() {
+  render();
+};
+
+</script>
+
+<style>
+  body {
+    font-family: sans-serif;
+    background-color: rgba(128, 201, 255, 0.24);
+  }
+  #app, .app {
+    height: 100%;
+  }
+  .app {
+    max-width: 400px;
+    margin: auto;
+    position: relative;
+  }
+  .item-img {
+    border-radius: 10px;
+    width: 80px;
+    height: 80px;
+    margin: 10px;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+  }
+  .search-wrapper {
+    width: 100%;
+    position: absolute;
+    z-index: 1;
+    top: 0px;
+  }
+  .search {
+    font-size: 30px;
+    color: grey;
+    width: 100%;
+  }
+  .search-remove {
+    color: grey;
+    cursor: pointer;
+    position: absolute;
+    right: 10px;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    font-size: 30px;
+  }
+  .items-list {
+    top: 40px;
+    position: absolute;
+    width: 100%;
+    bottom: 0px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow: scroll;
+  }
+  .no-items-found {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 40px;
+    text-align: center;
+  }
+  .item {
+    background-color: white;
+    width: 100%;
+    height: 100px;
+    min-height: 100px;
+    margin: 10px 10px;
+    border-radius: 20px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .item-content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .item-name {
+    font-size: 18px;
+  }
+
+  .item-acceptable .item-content {
+    color: green;
+  }
+
+  .item-not-acceptable .item-content {
+    color: red;
+  }
+
+  .item-status {
+  }
+</style>
+
+</head>
+<body>
+  <div id='app'></div>
+</body>
+</html>
